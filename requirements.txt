@@ -1,0 +1,3 @@
+streamlit
+grpcio
+chirpstack-api
