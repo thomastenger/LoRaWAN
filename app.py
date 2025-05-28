@@ -81,7 +81,8 @@ t = translations[lang]
 
 # --------------- CONFIGURATION ---------------
 
-server = "chirpstack:8080"
+#server = "chirpstack:8080"
+server =  "https://1d9c-158-193-152-33.ngrok-free.app"
 api_token = st.secrets["CHIRPSTACK_API_TOKEN"]
 application_id = "c26f569e-4361-45b4-90e7-63c2fd56d88b"
 device_profile_id = "0fdd2cac-d304-4e13-b310-1eca13302fe5"
@@ -157,7 +158,8 @@ if st.session_state.email_verified:
                 st.error(t["device_name_required"])
             else:
                 try:
-                    channel = grpc.insecure_channel(server)
+                    #channel = grpc.insecure_channel(server)
+                    channel = grpc.secure_channel(server, grpc.ssl_channel_credentials())
                     client = api.DeviceServiceStub(channel)
                     metadata = [("authorization", f"Bearer {api_token}")]
 
