@@ -82,7 +82,7 @@ t = translations[lang]
 # --------------- CONFIGURATION ---------------
 
 #server = "chirpstack:8080"
-server =  "https://1d9c-158-193-152-33.ngrok-free.app"
+server =  "1d9c-158-193-152-33.ngrok-free.app:80"
 api_token = st.secrets["CHIRPSTACK_API_TOKEN"]
 application_id = "c26f569e-4361-45b4-90e7-63c2fd56d88b"
 device_profile_id = "0fdd2cac-d304-4e13-b310-1eca13302fe5"
