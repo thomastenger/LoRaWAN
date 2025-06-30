@@ -8,7 +8,8 @@ RUN apt-get update && apt-get install -y \
 # Installer dépendances Python
 WORKDIR /app
 COPY . /app
-RUN pip install --no-cache-dir streamlit grpcio chirpstack-api
+RUN pip install --no-cache-dir streamlit grpcio chirpstack-api psycopg2-binary
+
 
 # Port exposé
 EXPOSE 8501
