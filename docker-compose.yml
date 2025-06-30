@@ -132,34 +132,6 @@ services:
       - postgres
     networks:
       - chirpstack-net
-  
-  prometheus:
-    image: prom/prometheus
-    container_name: prometheus
-    restart: unless-stopped
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./configuration/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    depends_on:
-      - snmp-exporter
-    networks:
-      - chirpstack-net
-
-  snmp-exporter:
-    image: prom/snmp-exporter
-    container_name: snmp-exporter
-    ports:
-      - "9116:9116"
-    volumes:
-      - ./configuration/snmp/snmp.yml:/etc/snmp_exporter/snmp.yml
-    command:
-      - --config.file=/etc/snmp_exporter/snmp.yml
-    networks:
-      - chirpstack-net
-
-
-
 
 volumes:
   postgresqldata:
