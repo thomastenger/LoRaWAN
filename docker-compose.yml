@@ -102,7 +102,6 @@ services:
       - "8501:8501" 
     volumes:
       - ./streamlit-app:/app
-      - ./streamlit-app/secrets.toml:/root/.streamlit/secrets.toml
 
   nginx-proxy:
     image: nginx:stable
