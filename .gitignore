@@ -2,6 +2,4 @@
 .*
 !.gitattributes
 
-# data folder
-/data
-/lorawan-devices
+/streamlit-app/secrets.toml
