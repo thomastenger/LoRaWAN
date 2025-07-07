@@ -156,6 +156,7 @@ After submission, your new device profile should appear in the list.
 
 The gateway should now be listed in the interface.
 
+--
 
 ### 📱 4. Create an Application
 
