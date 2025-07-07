@@ -21,7 +21,6 @@ def log_api_usage(user_email, endpoint=None, status='success'):
         )
         cur = conn.cursor()
 
-        # tentative récupération IP
         ip = socket.gethostbyname(socket.gethostname())
 
         cur.execute(
@@ -64,7 +63,6 @@ translations = {
         "rgpd_duration": "Durée : conservées 6 mois puis supprimées.",
         "rgpd_rights": "Vos droits : Demande d’accès/suppression via :",
         "rgpd_contact": "contact@votresite.com"
-
     },
     "en": {
         "title": "Email verification & ChirpStack device registration (OTAA)",
@@ -94,7 +92,6 @@ translations = {
         "rgpd_duration": "Retention: stored for 6 months then deleted.",
         "rgpd_rights": "Your rights: Request access/removal via:",
         "rgpd_contact": "contact@yourdomain.com"
-
     },
     "sk": {
         "title": "Overenie e-mailu a pridanie zariadenia ChirpStack (OTAA)",
@@ -124,7 +121,6 @@ translations = {
         "rgpd_duration": "Uchovávanie: 6 mesiacov, potom vymazané.",
         "rgpd_rights": "Vaše práva: Žiadosť o prístup/vymazanie na:",
         "rgpd_contact": "kontakt@vasedomena.sk"
-
     }
 }
 
@@ -135,15 +131,15 @@ t = translations[lang]
 # Configuration
 server = "chirpstack:8080"
 api_token = st.secrets["CHIRPSTACK_API_TOKEN"]
-application_id = "c26f569e-4361-45b4-90e7-63c2fd56d88b"
-device_profile_id = "0fdd2cac-d304-4e13-b310-1eca13302fe5"
+application_id = st.secrets["APPLICATION_ID"] 
+device_profile_id = st.secrets["DEVICE_Profile_ID"] 
 
 SMTP_SERVER = st.secrets["SMTP_SERVER"]
 SMTP_PORT = int(st.secrets["SMTP_PORT"])
 SMTP_LOGIN = st.secrets["SMTP_LOGIN"]
 SMTP_PASSWORD = st.secrets["SMTP_PASSWORD"]
 
-# État de la session
+# Session
 if "email_verified" not in st.session_state:
     st.session_state.email_verified = False
 if "otp_sent" not in st.session_state:
@@ -151,7 +147,7 @@ if "otp_sent" not in st.session_state:
 if "generated_otp" not in st.session_state:
     st.session_state.generated_otp = ""
 
-# Fonction d'envoi d'email
+# Envoi de l'OTP
 def send_otp_email(to_email, otp_code):
     subject = "Verification Code / Code de vérification"
     body = f"{t['code_sent']}\n\nOTP: {otp_code}"
@@ -169,7 +165,7 @@ def send_otp_email(to_email, otp_code):
         st.error(f"{t['email_send_error']} {e}")
         return False
 
-# Interface utilisateur
+# Interface
 st.title(t["title"])
 
 email = st.text_input(t["email_label"])
@@ -242,31 +238,31 @@ if st.session_state.email_verified:
 else:
     st.info(t["email_not_verified"])
 
-# Footer + modale RGPD en HTML/CSS/JS via components.html
-components.html("""
+# Modale RGPD dynamique
+components.html(f"""
 <style>
-.footer-rgpd {
+.footer-rgpd {{
     text-align: center;
     color: gray;
     font-size: 0.9em;
     margin-top: 50px;
-}
-.footer-rgpd a {
+}}
+.footer-rgpd a {{
     color: #4c8bf5;
     text-decoration: underline;
     cursor: pointer;
-}
+}}
 
-#rgpd-modal {
+#rgpd-modal {{
     display: none;
     position: fixed;
     z-index: 9998;
     left: 0; top: 0;
     width: 100%; height: 100%;
     background-color: rgba(0, 0, 0, 0.6);
-}
+}}
 
-#rgpd-content {
+#rgpd-content {{
     position: fixed;
     top: 50%;
     left: 50%;
@@ -282,13 +278,13 @@ components.html("""
     color: #333;
     box-sizing: border-box;
     animation: fadeIn 0.3s ease-out;
-}
-@keyframes fadeIn {
-    from { opacity: 0; transform: translate(-50%, -60%); }
-    to   { opacity: 1; transform: translate(-50%, -50%); }
-}
+}}
+@keyframes fadeIn {{
+    from {{ opacity: 0; transform: translate(-50%, -60%); }}
+    to   {{ opacity: 1; transform: translate(-50%, -50%); }}
+}}
 
-#close-btn {
+#close-btn {{
     position: absolute;
     top: 10px;
     right: 15px;
@@ -296,42 +292,38 @@ components.html("""
     color: #888;
     cursor: pointer;
     font-weight: bold;
-}
-#close-btn:hover {
+}}
+#close-btn:hover {{
     color: black;
-}
+}}
 
-/* Responsive pour téléphone */
-@media only screen and (max-width: 480px) {
-    #rgpd-content {
+@media only screen and (max-width: 480px) {{
+    #rgpd-content {{
         width: 95%;
         padding: 16px;
         font-size: 0.95em;
-    }
-    #close-btn {
+    }}
+    #close-btn {{
         font-size: 20px;
         right: 5px;
-    }
-}
+    }}
+}}
 </style>
 
 <div class="footer-rgpd">
-    🔐 En utilisant cette application, vous acceptez notre
-    <a onclick="document.getElementById('rgpd-modal').style.display='block';">politique de confidentialité</a>.
+    {t["rgpd_footer"]}
 </div>
 
 <div id="rgpd-modal">
     <div id="rgpd-content">
         <span id="close-btn" onclick="document.getElementById('rgpd-modal').style.display='none';">&times;</span>
-        <h3>Politique de confidentialité</h3>
-        <p><strong>Données collectées :</strong><br>
-        - Adresse e-mail<br>
-        - Adresse IP<br>
-        - Horaires de connexion</p>
-        <p><strong>Utilisation :</strong> à des fins de sécurité, journalisation, amélioration du service.</p>
-        <p><strong>Durée :</strong> conservées 6 mois puis supprimées.</p>
-        <p><strong>Vos droits :</strong> Demande d’accès/suppression via :
-        <a href='mailto:contact@votresite.com'>contact@votresite.com</a></p>
+        <h3>{t["rgpd_title"]}</h3>
+        <p><strong>{t["rgpd_collected"]}</strong><br>
+        {t["rgpd_fields"]}</p>
+        <p><strong>{t["rgpd_usage"]}</strong></p>
+        <p><strong>{t["rgpd_duration"]}</strong></p>
+        <p><strong>{t["rgpd_rights"]}</strong>
+        <a href='mailto:{t["rgpd_contact"]}'>{t["rgpd_contact"]}</a></p>
     </div>
 </div>
 """, height=300)
