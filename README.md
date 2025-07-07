@@ -162,4 +162,34 @@ The gateway should now be listed in the interface.
 
 Your application will now appear in the list and is ready to receive devices.
 
+### 5. Registration Form Configuration (Streamlit App)
+##
+To allow users to register through the provided web application, you need to configure the secret parameters for the Streamlit app.
 
+#### Steps:
+
+#### 1. Edit the `secrets.toml` file
+
+The `secrets.toml` file is located in the `./streamlit-app/` directory. Open it and fill in the following fields with your own values:  
+
+```toml
+SMTP_SERVER = "smtp.gmail.com"
+SMTP_PORT = 465
+SMTP_LOGIN = "xxxxx@gmail.com"
+SMTP_PASSWORD = "dror oqda ortw ndkv"  # Replace with your app-specific password
+APPLICATION_ID = "Your ChirpStack Application ID"
+DEVICE_PROFILE_ID = "The Device Profile ID created earlier"
+CHIRPSTACK_API_TOKEN = "API token generated in the API Keys section"
+
+💡 Notes:
+
+  - Use an app-specific password if your Gmail account has two-factor authentication enabled.
+  - The values for APPLICATION_ID and DEVICE_PROFILE_ID can be found in the ChirpStack web interface under Applications and Device Profiles, respectively.
+  - The CHIRPSTACK_API_TOKEN is the token generated during the API Key step.
+
+#### 2. Restart the `streamlit_app` service
+
+Once the `secrets.toml` file has been updated and saved, restart the `streamlit_app` service using the following command :
+
+```Docker 
+docker-compose restart streamlit_app
