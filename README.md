@@ -176,11 +176,11 @@ The `secrets.toml` file is located in the `./streamlit-app/` directory. Open it 
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 SMTP_LOGIN = "xxxxx@gmail.com"
-SMTP_PASSWORD = "dror oqda ortw ndkv"  # Replace with your app-specific password
+SMTP_PASSWORD = "App password generate by google"  
 APPLICATION_ID = "Your ChirpStack Application ID"
 DEVICE_PROFILE_ID = "The Device Profile ID created earlier"
 CHIRPSTACK_API_TOKEN = "API token generated in the API Keys section"
-
+```
 💡 Notes:
 
   - Use an app-specific password if your Gmail account has two-factor authentication enabled.
@@ -193,3 +193,4 @@ Once the `secrets.toml` file has been updated and saved, restart the `streamlit_
 
 ```Docker 
 docker-compose restart streamlit_app
+```
