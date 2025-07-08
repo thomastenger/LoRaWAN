@@ -194,3 +194,55 @@ Once the `secrets.toml` file has been updated and saved, restart the `streamlit_
 ```Docker 
 docker-compose restart streamlit_app
 ```
+
+## Grafana Integration (Monitoring & Statistics)
+
+This section explains how to configure **Grafana** to visualize ChirpStack data and logs using the integrated PostgreSQL database.
+
+## Access Grafana UI
+
+Open your browser and go to:  
+**http://localhost:3000**
+
+> Default login credentials:  
+> **Username:** `admin`  
+> **Password:** `admin`
+
+You will be prompted to change your password at the first login.
+
+## Configure PostgreSQL as a Data Source
+
+1. Go to the **Connections** tab under **Alerting** in the left-hand menu.
+2. Click on **Add new connection**.
+3. In the search bar, type `PostgreSQL`.
+4. Click on the **PostgreSQL** plugin.
+5. Then click **Add new data source**.
+6. Fill in the following fields:
+
+| Field               | Value            |
+|---------------------|------------------|
+| Host URL            | `postgres:5432`  |
+| Database name       | `chirpstack`     |
+| Username            | `chirpstack`     |
+| Password            | `chirpstack`     |
+| TLS/SSL Mode        | `disable`        |
+| PostgreSQL Version  | `14`             |
+
+7. Click **Save & Test** to verify the connection.
+
+## Import Dashboard
+
+1. Go to the **Dashboards** tab in the left menu.
+2. Click **Create dashboard**.
+3. Then select **Import dashboard**.
+4. Click **Upload JSON file**.
+5. Upload the prebuilt dashboard file located at:  
+   `./grafana/LoRaWAN-<your-file>.json`
+6. After importing:
+   - Open each panel.
+   - Click on the **Run Query** button at least once to fetch and display the data.
+
+## You're all set!
+
+Grafana will now display real-time and historical ChirpStack data and logs.  
+You can customize alerts, time ranges, and panel types as needed.
