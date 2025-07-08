@@ -241,8 +241,3 @@ You will be prompted to change your password at the first login.
 6. After importing:
    - Open each panel.
    - Click on the **Run Query** button at least once to fetch and display the data.
-
-## You're all set!
-
-Grafana will now display real-time and historical ChirpStack data and logs.  
-You can customize alerts, time ranges, and panel types as needed.
