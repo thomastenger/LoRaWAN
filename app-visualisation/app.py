@@ -69,7 +69,7 @@ def serial_sender():
 
                 time.sleep(SEND_INTERVAL)
     except serial.SerialException as e:
-        print(f"❌ Erreur série: {e}")
+        print(f"Erreur série: {e}")
 
 # --- Démarrage des threads ---
 threading.Thread(target=mqtt_loop, daemon=True).start()
