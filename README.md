@@ -237,7 +237,7 @@ You will be prompted to change your password at the first login.
 3. Then select **Import dashboard**.
 4. Click **Upload JSON file**.
 5. Upload the prebuilt dashboard file located at:  
-   `./grafana/LoRaWAN-<your-file>.json`
+   `./grafana/LoRaWAN-1751889408399.json`
 6. After importing:
    - Open each panel.
    - Click on the **Run Query** button at least once to fetch and display the data.
