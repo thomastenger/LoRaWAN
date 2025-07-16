@@ -84,7 +84,7 @@ latest revision no longer contains a `LICENSE` file.
 To start the ChirpStack simply run:
 
 ```bash
-$ docker-compose up
+$ sudo docker-compose up
 ```
 
 After all the components have been initialized and started, you should be able
@@ -98,9 +98,9 @@ You should be able to access the UI by opening http://localhost:8090 in your bro
 **Note:** It is recommended to use the [gRPC](https://www.chirpstack.io/docs/chirpstack/api/grpc.html)
 interface over the [REST](https://www.chirpstack.io/docs/chirpstack/api/rest.html) interface.
 
-## Manual Web UI Configuration
+## ChirpStack Manual Web UI Configuration
 
-After launching the ChirpStack stack with `docker-compose up`, follow the steps below to configure the API, device profiles, gateways, and applications through the ChirpStack web interface at [http://localhost:8080](http://localhost:8080).
+After launching the ChirpStack stack with `sudo docker-compose up`, follow the steps below to configure the API, device profiles, gateways, and applications through the ChirpStack web interface at [http://localhost:8080](http://localhost:8080).
 
 ### 1. Generate an API Key
 ##
