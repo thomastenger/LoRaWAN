@@ -178,7 +178,7 @@ SMTP_PORT = 465
 SMTP_LOGIN = "xxxxx@gmail.com"
 SMTP_PASSWORD = "App password generate by google"  
 APPLICATION_ID = "Your ChirpStack Application ID"
-DEVICE_PROFILE_ID = "The Device Profile ID created earlier"
+DEVICE_Profile_ID = "The Device Profile ID created earlier"
 CHIRPSTACK_API_TOKEN = "API token generated in the API Keys section"
 ```
 💡 Notes:
