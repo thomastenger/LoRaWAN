@@ -55,7 +55,7 @@ client.connect(MQTT_BROKER, MQTT_PORT, 60)
 def serial_sender():
     try:
         with serial.Serial(SERIAL_PORT, BAUDRATE, timeout=1) as ser:
-            print(f"✅ Connecté à {SERIAL_PORT} @ {BAUDRATE} baud")
+            print(f" Connecté à {SERIAL_PORT} @ {BAUDRATE} baud")
             while True:
                 # Générer température aléatoire entre 5 et 35
                 temp = random.randint(5, 35)
@@ -65,7 +65,7 @@ def serial_sender():
 
                 command = f"AT+SENDB=1,2,{length},{hex_data}\r\n"
                 ser.write(command.encode())
-                print(f"📤 Commande envoyée: {command.strip()}")
+                print(f" Commande envoyée: {command.strip()}")
 
                 time.sleep(SEND_INTERVAL)
     except serial.SerialException as e:

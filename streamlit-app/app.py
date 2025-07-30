@@ -10,6 +10,100 @@ from chirpstack_api import api
 import psycopg2
 from datetime import datetime
 import socket
+import secrets
+import string
+import requests
+
+# Configuration
+
+api_token = st.secrets["CHIRPSTACK_API_TOKEN"]
+##application_id = st.secrets["APPLICATION_ID"] 
+device_profile_id = st.secrets["DEVICE_Profile_ID"] 
+
+SMTP_SERVER = st.secrets["SMTP_SERVER"]
+SMTP_PORT = int(st.secrets["SMTP_PORT"])
+SMTP_LOGIN = st.secrets["SMTP_LOGIN"]
+SMTP_PASSWORD = st.secrets["SMTP_PASSWORD"]
+CHIRPSTACK_SERVER = st.secrets["CHIRPSTACK_SERVER"]
+
+
+def create_user_and_app(email, tenant_id=st.secrets["TENANT_ID"], is_admin=False):
+
+    api_token_admin = st.secrets["CHIRPSTACK_ADMIN_API_TOKEN"]
+    auth_token = [("authorization", f"Bearer {api_token_admin}")]
+
+    channel = grpc.insecure_channel(CHIRPSTACK_SERVER)
+    user_client = api.UserServiceStub(channel)
+    tenant_client = api.TenantServiceStub(channel)
+    app_client = api.ApplicationServiceStub(channel)
+
+    password = generate_secure_password()
+
+    try:
+        # Create User
+        create_req = api.CreateUserRequest()
+        create_req.user.email = email
+        create_req.user.is_active = True
+        create_req.user.is_admin = is_admin
+        create_req.password = password
+        user_client.Create(create_req, metadata=auth_token)
+
+        list_req = api.ListUsersRequest(limit=100)
+        resp = user_client.List(list_req, metadata=auth_token)
+        user_id = next((u.id for u in resp.result if u.email == email), None)
+        if not user_id:
+            return False
+
+        add_req = api.AddTenantUserRequest()
+        add_req.tenant_user.CopyFrom(api.TenantUser(
+            tenant_id=tenant_id,
+            user_id=user_id,
+            email=email,
+            is_admin=False,
+            is_device_admin=True,
+            is_gateway_admin=False
+        ))
+        tenant_client.AddUser(add_req, metadata=auth_token)
+
+        # Create ChirpStack App
+        app_name = email.split("@")[0]
+        app_req = api.CreateApplicationRequest()
+        app_req.application.name = app_name
+        app_req.application.description = f"Application pour {email}"
+        app_req.application.tenant_id = tenant_id
+        app_req.application.tags["owner"] = email
+        app_client.Create(app_req, metadata=auth_token)
+
+        
+        send_ok = send_password_email(email, password)
+        if not send_ok:
+            return True
+
+    except grpc.RpcError as e:
+        st.error(f"Error ChirpStack : {e.details()} (code: {e.code()})")
+        return False
+
+
+def user_exists(email):
+
+    api_token_admin = st.secrets["CHIRPSTACK_ADMIN_API_TOKEN"]
+    auth_token = [("authorization", f"Bearer {api_token_admin}")]
+    channel = grpc.insecure_channel(CHIRPSTACK_SERVER)
+    user_client = api.UserServiceStub(channel)
+
+    try:
+        req = api.ListUsersRequest(limit=1000)
+        resp = user_client.List(req, metadata=auth_token)
+
+        for user in resp.result:
+            if user.email.lower() == email.lower():
+                return True 
+        return False
+    except grpc.RpcError as e:
+        st.error(f"Error verification of user : {e.details()} ({e.code()})")
+        return False 
+
+
 
 def log_api_usage(user_email, endpoint=None, status='success'):
     try:
@@ -33,10 +127,67 @@ def log_api_usage(user_email, endpoint=None, status='success'):
     except Exception as e:
         st.warning(f"Log failed: {e}")
 
+def get_application_id_by_email(email):
+
+    api_token = st.secrets["CHIRPSTACK_API_TOKEN"]
+    tenant_id = st.secrets["TENANT_ID"]
+    auth_token = [("authorization", f"Bearer {api_token}")]
+
+    channel = grpc.insecure_channel(CHIRPSTACK_SERVER)
+    app_client = api.ApplicationServiceStub(channel)
+
+    try:
+        req = api.ListApplicationsRequest(limit=100, tenant_id=tenant_id)
+        resp = app_client.List(req, metadata=auth_token)
+
+        for app_item in resp.result:
+            if not app_item.id:
+                continue
+
+            app_detail = app_client.Get(api.GetApplicationRequest(id=app_item.id), metadata=auth_token)
+            owner = app_detail.application.tags.get("owner")
+            if owner == email:
+                return app_detail.application.id
+
+        return None
+
+    except grpc.RpcError as e:
+        st.error(f"Error application: {e.details()} ({e.code()})")
+        return None
+
+def generate_secure_password(length=12):
+    alphabet = string.ascii_letters + string.digits + "!@#$%^&*()"
+    return ''.join(secrets.choice(alphabet) for _ in range(length))
+
+
+def send_password_email(to_email, password):
+    subject = t["email_subject_password"]
+    body = t["email_body_password"].format(email=to_email, password=password)
+
+    msg = MIMEText(body)
+    msg["Subject"] = subject
+    msg["From"] = SMTP_LOGIN
+    msg["To"] = to_email
+
+    try:
+        with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT) as server:
+            server.login(SMTP_LOGIN, SMTP_PASSWORD)
+            server.sendmail(SMTP_LOGIN, to_email, msg.as_string())
+        return True
+    except Exception as e:
+        st.error(f"Error send email : {e}")
+        return False
+
+
+
+
+
+
 # Traductions
 translations = {
     "fr": {
         "title": "Vérification email & ajout device ChirpStack (OTAA)",
+        "User_exist": "✅ Utilisateur existant, veuillez valider votre identité.",
         "email_label": "Adresse email",
         "send_code": "Envoyer le code de vérification",
         "code_sent": "Code envoyé ! Vérifiez votre boîte mail.",
@@ -62,10 +213,24 @@ translations = {
         "rgpd_usage": "Utilisation : à des fins de sécurité, journalisation, amélioration du service.",
         "rgpd_duration": "Durée : conservées 6 mois puis supprimées.",
         "rgpd_rights": "Vos droits : Demande d’accès/suppression via :",
-        "rgpd_contact": "contact@votresite.com"
+        "rgpd_contact": "contact@votresite.com",
+        "email_subject_password": "Votre accès à la plateforme ChirpStack",
+        "email_body_password": """Bonjour,
+
+        Votre compte ChirpStack a bien été créé.
+
+        Voici vos informations de connexion :
+        📧 Email : {email}
+        🔑 Mot de passe : {password}
+
+        Merci d'utiliser notre service.
+
+        L’équipe technique
+        """
     },
     "en": {
         "title": "Email verification & ChirpStack device registration (OTAA)",
+        "User_exist": "✅ Existing user, please verify your identity.",
         "email_label": "Email address",
         "send_code": "Send verification code",
         "code_sent": "Code sent! Check your inbox.",
@@ -91,10 +256,24 @@ translations = {
         "rgpd_usage": "Purpose: security, logging, and service improvement.",
         "rgpd_duration": "Retention: stored for 6 months then deleted.",
         "rgpd_rights": "Your rights: Request access/removal via:",
-        "rgpd_contact": "contact@yourdomain.com"
+        "rgpd_contact": "contact@yourdomain.com",
+        "email_subject_password": "Your ChirpStack platform access",
+        "email_body_password": """Hello,
+
+        Your ChirpStack account has been successfully created.
+
+        Here are your login details:
+        📧 Email: {email}
+        🔑 Password: {password}
+
+        Thank you for using our service.
+
+        The technical team
+        """
     },
     "sk": {
         "title": "Overenie e-mailu a pridanie zariadenia ChirpStack (OTAA)",
+        "User_exist": "✅ Ak ste existujúci používateľ, potvrďte svoju identitu.",
         "email_label": "Emailová adresa",
         "send_code": "Odoslať overovací kód",
         "code_sent": "Kód bol odoslaný! Skontrolujte si e-mail.",
@@ -113,41 +292,46 @@ translations = {
         "email_send_error": "Chyba pri odosielaní e-mailu:",
         "chirpstack_error": "Chyba ChirpStack",
         "app_key_label": "AppKey (32 hex znakov)",
-        "rgpd_footer": "🔐 Používaním tejto aplikácie súhlasíte s našimi <a onclick=\\\"document.getElementById('rgpd-modal').style.display='block';\\\">zásadami ochrany osobných údajov</a>.",
+        "rgpd_footer": "🔐 Používaním tejto aplikácie súhlasíte s našimi <a onclick=\"document.getElementById('rgpd-modal').style.display='block';\">zásadami ochrany osobných údajov</a>.",
         "rgpd_title": "Zásady ochrany osobných údajov",
         "rgpd_collected": "Zhromažďované údaje:",
         "rgpd_fields": "- Emailová adresa<br>- IP adresa<br>- Čas pripojenia",
         "rgpd_usage": "Použitie: na účely bezpečnosti, protokolovania a zlepšenia služby.",
         "rgpd_duration": "Uchovávanie: 6 mesiacov, potom vymazané.",
         "rgpd_rights": "Vaše práva: Žiadosť o prístup/vymazanie na:",
-        "rgpd_contact": "kontakt@vasedomena.sk"
+        "rgpd_contact": "kontakt@vasedomena.sk",
+        "email_subject_password": "Váš prístup na platformu ChirpStack",
+        "email_body_password": """Dobrý deň,
+
+        Váš účet ChirpStack bol úspešne vytvorený.
+
+        Tu sú vaše prihlasovacie údaje:
+        📧 Email: {email}
+        🔑 Heslo: {password}
+
+        Ďakujeme, že používate naše služby.
+
+        Technický tím
+        """
     }
 }
 
-# Choix de la langue
+
 lang = st.sidebar.selectbox("🌐 Choisir la langue / Select language / Zvoliť jazyk", ["fr", "en", "sk"])
 t = translations[lang]
 
-# Configuration
-server = "chirpstack:8080"
-api_token = st.secrets["CHIRPSTACK_API_TOKEN"]
-application_id = st.secrets["APPLICATION_ID"] 
-device_profile_id = st.secrets["DEVICE_Profile_ID"] 
 
-SMTP_SERVER = st.secrets["SMTP_SERVER"]
-SMTP_PORT = int(st.secrets["SMTP_PORT"])
-SMTP_LOGIN = st.secrets["SMTP_LOGIN"]
-SMTP_PASSWORD = st.secrets["SMTP_PASSWORD"]
 
-# Session
 if "email_verified" not in st.session_state:
     st.session_state.email_verified = False
 if "otp_sent" not in st.session_state:
     st.session_state.otp_sent = False
 if "generated_otp" not in st.session_state:
     st.session_state.generated_otp = ""
+if "login_step" not in st.session_state:
+    st.session_state.login_step = "start"  # start, otp, login, verified
 
-# Envoi de l'OTP
+
 def send_otp_email(to_email, otp_code):
     subject = "Verification Code / Code de vérification"
     body = f"{t['code_sent']}\n\nOTP: {otp_code}"
@@ -165,32 +349,61 @@ def send_otp_email(to_email, otp_code):
         st.error(f"{t['email_send_error']} {e}")
         return False
 
-# Interface
+
 st.title(t["title"])
 
 email = st.text_input(t["email_label"])
 
-if st.button(t["send_code"]):
-    otp = f"{random.randint(100000, 999999)}"
-    sent = send_otp_email(email, otp)
-    if sent:
-        st.session_state.generated_otp = otp
-        st.session_state.otp_sent = True
-        st.session_state.email = email
-        st.success(t["code_sent"])
+if st.session_state.login_step == "start":
+    if st.button(t["send_code"]):
+        if user_exists(email):
+            otp = f"{random.randint(100000, 999999)}"
+            sent = send_otp_email(email, otp)
+            if sent:
+                st.session_state.generated_otp = otp
+                st.session_state.email = email
+                st.session_state.login_step = "login"
+                st.success(t["code_sent"])
+                st.rerun()    
+        else:
+            otp = f"{random.randint(100000, 999999)}"
+            sent = send_otp_email(email, otp)
+            if sent:
+                st.session_state.generated_otp = otp
+                st.session_state.email = email
+                st.session_state.login_step = "otp"
+                st.success(t["code_sent"])
+                st.rerun()  
 
-if st.session_state.otp_sent and not st.session_state.email_verified:
+elif st.session_state.login_step == "login":
+    st.info(t["User_exist"])
     otp_input = st.text_input(t["enter_code"])
     if st.button(t["verify_code"]):
         if otp_input == st.session_state.generated_otp:
-            st.session_state.email_verified = True
+
+            st.session_state.login_step = "verified"
             st.success(t["code_validated"])
-            log_api_usage(email, endpoint="email_verification", status="success connection")
         else:
             st.error(t["invalid_code"])
             log_api_usage(email, endpoint="failed_verification", status="fail connection")
 
-if st.session_state.email_verified:
+elif st.session_state.login_step == "otp":
+    otp_input = st.text_input(t["enter_code"])
+    if st.button(t["verify_code"]):
+        if otp_input == st.session_state.generated_otp:
+
+            st.session_state.login_step = "verified"
+            st.success(t["code_validated"])
+            log_api_usage(email, endpoint="email_verification", status="success connection")
+            created = create_user_and_app(st.session_state.email)
+            if not created:
+                st.stop()
+        else:
+            st.error(t["invalid_code"])
+            log_api_usage(email, endpoint="failed_verification", status="fail connection")
+
+
+if st.session_state.login_step == "verified":
     st.subheader(t["add_device"])
     with st.form("add_device_form"):
         dev_eui = st.text_input(t["dev_eui_label"], max_chars=16)
@@ -207,14 +420,17 @@ if st.session_state.email_verified:
                 st.error("Invalid AppKey. Must be 32 hexadecimal characters.")
             else:
                 try:
-                    channel = grpc.insecure_channel(server)
+                    channel = grpc.insecure_channel(CHIRPSTACK_SERVER)
                     client = api.DeviceServiceStub(channel)
                     metadata = [("authorization", f"Bearer {api_token}")]
 
                     device = api.Device()
                     device.dev_eui = dev_eui
                     device.name = dev_name
-                    device.application_id = application_id
+                    user_app_id = get_application_id_by_email(st.session_state.email)
+                    if not user_app_id:
+                        st.stop()
+                    device.application_id = user_app_id
                     device.description = st.session_state.email
                     device.device_profile_id = device_profile_id
 
