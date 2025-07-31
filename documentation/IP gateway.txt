@@ -1,0 +1,4 @@
+gateway ID (647fdafffe005770) Ip: 192.168.10.2
+gateway ID (647fdafffe005780) Ip: 192.168.10.3
+
+For changing IP, use softaware KonaFT or connect to the gateway via shh
