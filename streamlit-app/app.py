@@ -17,7 +17,6 @@ import requests
 # Configuration
 
 api_token = st.secrets["CHIRPSTACK_API_TOKEN"]
-##application_id = st.secrets["APPLICATION_ID"] 
 device_profile_id = st.secrets["DEVICE_Profile_ID"] 
 
 SMTP_SERVER = st.secrets["SMTP_SERVER"]
@@ -69,7 +68,7 @@ def create_user_and_app(email, tenant_id=st.secrets["TENANT_ID"], is_admin=False
         app_name = email.split("@")[0]
         app_req = api.CreateApplicationRequest()
         app_req.application.name = app_name
-        app_req.application.description = f"Application pour {email}"
+        app_req.application.description = f"Application for {email}"
         app_req.application.tenant_id = tenant_id
         app_req.application.tags["owner"] = email
         app_client.Create(app_req, metadata=auth_token)
@@ -189,6 +188,9 @@ translations = {
         "title": "Vérification email & ajout device ChirpStack (OTAA)",
         "User_exist": "✅ Utilisateur existant, veuillez valider votre identité.",
         "email_label": "Adresse email",
+        "unique_id": "Identifiant unique du device (16 caractères hexadécimaux, souvent fourni par le constructeur)",
+        "name_device": "Nom libre du device (ex: capteur_temp_salon). Sert à l'identification dans ChirpStack",
+        "App_keys": "Clé de sécurité (AppKey) utilisée pour l'authentification OTAA. 32 caractères hexadécimaux",
         "send_code": "Envoyer le code de vérification",
         "code_sent": "Code envoyé ! Vérifiez votre boîte mail.",
         "enter_code": "Entrez le code OTP reçu par email",
@@ -231,7 +233,10 @@ translations = {
     "en": {
         "title": "Email verification & ChirpStack device registration (OTAA)",
         "User_exist": "✅ Existing user, please verify your identity.",
+        "name_device": "Free name for the device (e.g., living_room_temp_sensor). Used for identification in ChirpStack",
+        "App_keys": "Security key (AppKey) used for OTAA authentication. 32 hexadecimal characters",
         "email_label": "Email address",
+        "unique_id": "Unique device identifier (16 hexadecimal characters, often provided by the manufacturer)",
         "send_code": "Send verification code",
         "code_sent": "Code sent! Check your inbox.",
         "enter_code": "Enter the OTP code received by email",
@@ -275,6 +280,9 @@ translations = {
         "title": "Overenie e-mailu a pridanie zariadenia ChirpStack (OTAA)",
         "User_exist": "✅ Ak ste existujúci používateľ, potvrďte svoju identitu.",
         "email_label": "Emailová adresa",
+        "unique_id": "Jedinečné identifikačné číslo zariadenia (16 hexadecimálnych znakov, často poskytované výrobcom)",
+        "name_device": "Voľný názov zariadenia (napr.: senzor_temp_obývačka). Slúži na identifikáciu v ChirpStack",
+        "App_keys": "Bezpečnostný kľúč (AppKey) používaný na autentifikáciu OTAA. 32 hexadecimálnych znakov",
         "send_code": "Odoslať overovací kód",
         "code_sent": "Kód bol odoslaný! Skontrolujte si e-mail.",
         "enter_code": "Zadajte OTP kód z e-mailu",
@@ -317,7 +325,7 @@ translations = {
 }
 
 
-lang = st.sidebar.selectbox("🌐 Choisir la langue / Select language / Zvoliť jazyk", ["fr", "en", "sk"])
+lang = st.sidebar.selectbox("🌐 Choisir la langue / Select language / Zvoliť jazyk", ["sk", "en", "fr"])
 t = translations[lang]
 
 
@@ -406,9 +414,9 @@ elif st.session_state.login_step == "otp":
 if st.session_state.login_step == "verified":
     st.subheader(t["add_device"])
     with st.form("add_device_form"):
-        dev_eui = st.text_input(t["dev_eui_label"], max_chars=16)
-        dev_name = st.text_input(t["device_name_label"])
-        app_key = st.text_input(t["app_key_label"], max_chars=32)
+        dev_eui = st.text_input(t["dev_eui_label"], max_chars=16, help=t["unique_id"])
+        dev_name = st.text_input(t["device_name_label"], help=t["name_device"])
+        app_key = st.text_input(t["app_key_label"], max_chars=32, help=t["App_keys"])
         submitted = st.form_submit_button(t["submit_device"])
 
         if submitted:
