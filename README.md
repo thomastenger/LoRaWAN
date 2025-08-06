@@ -220,13 +220,13 @@ The `secrets.toml` file is located in the `./streamlit-app/` directory. Open it 
 ```toml
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
-SMTP_LOGIN = "xxxxx@gmail.com"
+SMTP_LOGIN = "xxxxxxx@gmail.com"
 SMTP_PASSWORD = "App password generate by google"  
-TENANT_ID = "Your ChirpStack Tenant ID" 
 DEVICE_Profile_ID = "The Device Profile ID created earlier"
 CHIRPSTACK_API_TOKEN = "API token generated in the tenant API Keys section"
 CHIRPSTACK_ADMIN_API_TOKEN = "API token generated in the Network Server API Keys section"
-
+TENANT_ID = "Your ChirpStack Tenant ID"
+CHIRPSTACK_SERVER = "chirpstack:8080"
 ```
 💡 Notes:
 
