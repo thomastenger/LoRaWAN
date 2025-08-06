@@ -162,7 +162,7 @@ The gateway should now be listed in the interface.
 
 ## Grafana Integration (Monitoring & Statistics)
 
-After launching the grafana stack with `docker-compose -f docker-compose.grafana.yml up -d`, follow the steps below to configure **Grafana** to visualize ChirpStack data and logs using the integrated PostgreSQL database.
+After launching the grafana stack with `sudo docker-compose -f docker-compose.grafana.yml up -d`, follow the steps below to configure **Grafana** to visualize ChirpStack data and logs using the integrated PostgreSQL database.
 
 ## Access Grafana UI
 
