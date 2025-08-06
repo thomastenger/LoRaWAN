@@ -1,4 +1,4 @@
-# Docker configuration 
+# Docker configuration
 
 This repository contains a skeleton to setup the [ChirpStack](https://www.chirpstack.io)
 open-source LoRaWAN Network Server (v4) using [Docker Compose](https://docs.docker.com/compose/).
