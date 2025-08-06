@@ -1,4 +1,4 @@
-# ChirpStack Docker example
+#Docker configuration
 
 This repository contains a skeleton to setup the [ChirpStack](https://www.chirpstack.io)
 open-source LoRaWAN Network Server (v4) using [Docker Compose](https://docs.docker.com/compose/).
@@ -84,6 +84,7 @@ latest revision no longer contains a `LICENSE` file.
 To start the ChirpStack simply run:
 
 ```bash
+$ sudo docker network create chirpstack-net
 $ sudo docker-compose -f docker-compose.chirpstack.yml up -d
 ```
 
