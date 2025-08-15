@@ -3,11 +3,10 @@ services:
     build: ./streamlit-app
     container_name: streamlit_app
     restart: unless-stopped
-    ports:
-      - "8501:8501" 
     volumes:
       - ./streamlit-app:/app
-      - ./streamlit-app/secrets.toml:/root/.streamlit/secrets.toml 
+      - ./streamlit-app/secrets.toml:/root/.streamlit/secrets.toml
+      - ./streamlit-app/config.toml:/root/.streamlit/config.toml
     networks:
       - chirpstack-net
 
@@ -17,8 +16,23 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    networks:
+      - chirpstack-net
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    depends_on:
+      - nginx-proxy
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: sh -c "trap exit TERM; while :; do sleep 12h & wait $${!}; certbot renew; done"
     networks:
       - chirpstack-net
 

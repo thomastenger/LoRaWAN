@@ -3,18 +3,13 @@ services:
     image: grafana/grafana-oss
     container_name: grafana
     restart: unless-stopped
-    ports:
-      - "3000:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
-      - grafana_data:/var/lib/grafana
+      - ./data/grafana:/var/lib/grafana
     networks:
       - chirpstack-net
-
-volumes:
-  grafana_data:
 
 networks:
   chirpstack-net:
